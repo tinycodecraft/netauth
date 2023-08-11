@@ -1,11 +1,20 @@
 using System.Text;
 using ApiWithAuth;
+using ApiWithAuth.Abstraction;
+using ApiWithAuth.Models;
+using ApiWithAuth.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
+
 var builder = WebApplication.CreateBuilder(args);
+var authsetting = builder.Configuration.GetSection(Constants.Setting.AuthSetting);
+var encryptionService = new StringEncrypService();
+authsetting[nameof(AuthSetting.Secret)] = encryptionService.EncryptString(authsetting[nameof(AuthSetting.SecretKey)] ?? "");
+
+builder.Services.Configure<AuthSetting>(authsetting);
 
 // Add services to the container.
 builder.Services.AddDbContext<UsersContext>();
@@ -45,6 +54,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        
         options.TokenValidationParameters = new TokenValidationParameters()
         {
             ClockSkew = TimeSpan.Zero,
@@ -55,7 +65,7 @@ builder.Services
             ValidIssuer = "apiWithAuthBackend",
             ValidAudience = "apiWithAuthBackend",
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("!SomethingSecret!")
+                Encoding.UTF8.GetBytes(authsetting[nameof(AuthSetting.Secret)] ?? "")
             ),
         };
     });

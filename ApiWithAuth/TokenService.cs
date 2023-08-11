@@ -2,13 +2,20 @@ using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using ApiWithAuth.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ApiWithAuth
 {
     public class TokenService
     {
+        private readonly string _secret;
+        public TokenService(IOptions<AuthSetting> option) {
+
+            _secret = option.Value.Secret;
+        }
         private const int ExpirationMinutes = 30;
         public string CreateToken(IdentityUser user)
         {
@@ -61,7 +68,7 @@ namespace ApiWithAuth
         {
             return new SigningCredentials(
                 new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes("!SomethingSecret!")
+                    Encoding.UTF8.GetBytes(_secret)
                 ),
                 SecurityAlgorithms.HmacSha256
             );
