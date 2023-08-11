@@ -42,6 +42,7 @@ namespace ApiWithAuth
                 signingCredentials: credentials
             );
 
+
         private List<Claim> CreateClaims(IdentityUser user)
         {
             try
