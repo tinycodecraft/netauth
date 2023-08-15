@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using NSwag.Generation.Processors.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 var authsetting = builder.Configuration.GetSection(Constants.Setting.AuthSetting);
@@ -22,36 +22,30 @@ builder.Services.AddScoped<TokenService, TokenService>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 //builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(option =>
+builder.Services.AddOpenApiDocument(option =>
 {
-    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
-    option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    option.Version = "v1";
+    option.Title = authsetting[nameof(AuthSetting.Issuer)];
+    option.Description = authsetting[nameof(AuthSetting.Issuer)];
+    option.AddSecurity("JWT", Enumerable.Empty<string>(), new NSwag.OpenApiSecurityScheme
     {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
+        Type = NSwag.OpenApiSecuritySchemeType.ApiKey,
         Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
+        In = NSwag.OpenApiSecurityApiKeyLocation.Header,
+        Description = "Type into the textbox:Bearer {your JWT token}"
     });
-    option.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            new string[]{}
-        }
-    });
+    option.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor("JWT"));
+
+
 });
 
 builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddAuthentication(option =>
+    {
+        option.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        option.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        
+    })    
     .AddJwtBearer(options =>
     {
         
@@ -89,8 +83,10 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    //app.UseSwagger();
+    //app.UseSwaggerUI();
+    app.UseOpenApi();
+    app.UseSwaggerUi3();
 }
 
 app.UseHttpsRedirection();
