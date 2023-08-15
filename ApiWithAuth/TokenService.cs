@@ -12,9 +12,14 @@ namespace ApiWithAuth
     public class TokenService
     {
         private readonly string _secret;
+        private readonly string _issuer;
+        private readonly string _audience;
         public TokenService(IOptions<AuthSetting> option) {
 
             _secret = option.Value.Secret;
+            _issuer = option.Value.Issuer;
+            _audience = option.Value.Audience;
+
         }
         private const int ExpirationMinutes = 30;
         public string CreateToken(IdentityUser user)
@@ -35,8 +40,8 @@ namespace ApiWithAuth
         private JwtSecurityToken CreateJwtToken(List<Claim> claims, SigningCredentials credentials,
             DateTime expiration) =>
             new(
-                "apiWithAuthBackend",
-                "apiWithAuthBackend",
+                _issuer,
+                _audience,
                 claims,
                 expires: expiration,
                 signingCredentials: credentials

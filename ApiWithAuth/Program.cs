@@ -62,8 +62,8 @@ builder.Services
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "apiWithAuthBackend",
-            ValidAudience = "apiWithAuthBackend",
+            ValidIssuer = authsetting[nameof(AuthSetting.Issuer)],
+            ValidAudience = authsetting[nameof(AuthSetting.Audience)],
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(authsetting[nameof(AuthSetting.Secret)] ?? "")
             ),
